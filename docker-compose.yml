@@ -1,0 +1,42 @@
+services:
+  mysql:
+    image: mysql:9.0
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_DB_ROOT_PASSWORD}
+    volumes:
+      - /var/run/mysqld:/var/run/mysqld
+      - data_mysql:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - network_shared
+    # check
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 30s
+      retries: 5
+      timeout: 5s
+
+  realtime_analysis:
+    build: ./
+    environment:
+      - NODE_ENV=production
+      - MYSQL_HOST=mysql
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    depends_on:
+      - mysql
+    ports:
+      - "60000:60000"
+    networks:
+      - network_shared      
+    command: npm start
+
+networks:
+  network_shared:
+volumes:
+  data_mysql:
